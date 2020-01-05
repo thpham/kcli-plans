@@ -1,9 +1,18 @@
 #!/bin/bash
+{% if deployment_type == 'origin' %}
+yum -y --enablerepo=epel install ansible pyOpenSSL screen bind-utils
+mkdir -p /usr/share/ansible/openshift-ansible
+wget -qO - https://github.com/openshift/openshift-ansible/archive/7f9f326ae4ffea1e3a9fb294b60af3d61a946281.tar.gz | tar -C /usr/share/ansible/openshift-ansible --strip-components=1 -zxf -
+{% else %}
 yum -y install openshift-ansible screen bind-utils
+{% endif %}
+{% if metrics %}
+yum -y install java-1.8.0-openjdk-devel.x86_64 python-passlib
+{% endif %}
 sed -i "s/#host_key_checking/host_key_checking = True/" /etc/ansible/ansible.cfg
 sed -i "s/#log_path/log_path/" /etc/ansible/ansible.cfg
 {% if deploy %}
-sleep 360
+sleep 120
 {% endif %}
 {% if type == 'kvm' %}
 export MASTERIP=`dig +short m01.{{ domain }}`

@@ -1,11 +1,11 @@
 parameters:
- template: rhel-server-7.7-x86_64-kvm.qcow2
- base_disk_size: 60
- glusterfs_disk_size: 60
+ template: CentOS-7-x86_64-GenericCloud.qcow2
+ base_disk_size: 40
+ glusterfs_disk_size: 80
  glusterfs_disk: vdb
  master_memory: 8144
- infra_memory: 4096
- node_memory: 4096
+ infra_memory: 8144
+ node_memory: 8144
  domain: default
  pool: default
  masters: 1
@@ -14,8 +14,9 @@ parameters:
  registry: registry.redhat.io
  crio: false
  asb: true
- metrics: false
- glusterfs: false
+ metrics: true
+ glusterfs: true
+ deployment_type: origin
  version: '3.11'
  deploy: true
  notifycmd: "tail -10 /var/log/ansible.log"
@@ -23,9 +24,9 @@ parameters:
 {% for master in range(0, masters) %}
 m0{{ master + 1 }}:
  template: {{ template }}
- numcpus: 2
+ numcpus: 4
  memory: {{ master_memory }}
- rhnregister: true
+ rhnregister: false
  reservedns: true
  sharedkey: true
  domain: {{ domain }}
@@ -44,8 +45,7 @@ m0{{ master + 1 }}:
 {% endif %}
   - path: /root/install_openshift.sh
     origin: multi/install_openshift.sh
- scripts: 
-  - multi/subscription.sh
+ scripts:
   - multi/pre.sh
 {% if deploy and master == 0 %}
   - multi/install.sh
@@ -57,9 +57,9 @@ m0{{ master + 1 }}:
 {% for node in range(0, nodes) %}
 n0{{ node + 1 }}:
  template: {{ template }}
- numcpus: 2
+ numcpus: 4
  memory: {{ node_memory }}
- rhnregister: true
+ rhnregister: false
  reservedns: true
  sharedkey: true
  domain: {{ domain }}
@@ -70,16 +70,15 @@ n0{{ node + 1 }}:
   - size: {{ glusterfs_disk_size }}
  pool: {{ pool }}
  scripts: 
-  - multi/subscription.sh
   - multi/pre.sh
 {% endfor %}
 
 {% for infra in range(0, infras) %}
 i0{{ infra + 1 }}:
  template: {{ template }}
- numcpus: 2
+ numcpus: 4
  memory: {{ infra_memory }}
- rhnregister: true
+ rhnregister: false
  reservedns: true
  sharedkey: true
  domain: {{ domain }}
@@ -90,6 +89,5 @@ i0{{ infra + 1 }}:
   - size: {{ glusterfs_disk_size }}
  pool: {{ pool }}
  scripts: 
-  - multi/subscription.sh
   - multi/pre.sh
 {% endfor %}
